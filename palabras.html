@@ -1,0 +1,131 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palabras - Regalo para mi Novia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        .modal {
+            display: none;
+        }
+        .modal.active {
+            display: flex;
+        }
+    </style>
+</head>
+<body class="bg-black text-white">
+    <div class="min-h-screen flex flex-col items-center py-10">
+        <div class="w-full flex justify-start px-4 mb-6">
+            <a href="index.html" class="text-white text-2xl">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-6">Nuestras Palabras</h1>
+        <form class="mb-6" id="uploadForm">
+            <input type="file" id="fileInput" class="hidden" accept="text/*">
+            <label for="fileInput" class="bg-gray-800 text-white px-4 py-2 rounded-full cursor-pointer hover:bg-gray-700 transition">Subir Palabra</label>
+        </form>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 px-4" id="wordGrid">
+            <!-- Aquí se mostrarán las palabras subidas -->
+        </div>
+    </div>
+
+    <!-- Modal para ver la palabra en grande -->
+    <div class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center" id="wordModal">
+        <div class="bg-white text-black p-6 rounded-lg max-w-lg w-full relative">
+            <p id="modalWord" class="text-lg"></p>
+            <button class="absolute top-4 right-4 text-black text-2xl" id="closeModal"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const wordGrid = document.getElementById('wordGrid');
+        const wordModal = document.getElementById('wordModal');
+        const modalWord = document.getElementById('modalWord');
+        const closeModal = document.getElementById('closeModal');
+
+        // Cargar palabras desde localStorage al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            const words = JSON.parse(localStorage.getItem('words')) || [];
+            words.forEach(word => {
+                addWordToGrid(word);
+            });
+        });
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const wordData = e.target.result;
+                    addWordToGrid(wordData);
+                    saveWordToLocalStorage(wordData);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function addWordToGrid(wordData) {
+            const wordDiv = document.createElement('div');
+            wordDiv.className = 'bg-gray-800 p-4 rounded-lg shadow-md cursor-pointer transition-transform transform hover:scale-105';
+            wordDiv.innerText = wordData;
+            wordDiv.addEventListener('click', () => {
+                modalWord.innerText = wordData;
+                wordModal.classList.add('active');
+            });
+
+            const favoriteButton = document.createElement('button');
+            favoriteButton.className = 'absolute top-2 left-2 text-white text-xl';
+            favoriteButton.innerHTML = '<i class="fas fa-heart"></i>';
+            favoriteButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                favoriteButton.classList.toggle('text-red-500');
+            });
+
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'absolute top-2 right-2 text-white text-xl';
+            deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteWordFromGrid(wordDiv, wordData);
+            });
+
+            const div = document.createElement('div');
+            div.className = 'relative';
+            div.appendChild(wordDiv);
+            div.appendChild(favoriteButton);
+            div.appendChild(deleteButton);
+            wordGrid.appendChild(div);
+        }
+
+        function saveWordToLocalStorage(wordData) {
+            const words = JSON.parse(localStorage.getItem('words')) || [];
+            words.push(wordData);
+            localStorage.setItem('words', JSON.stringify(words));
+        }
+
+        function deleteWordFromGrid(wordElement, wordData) {
+            wordElement.parentElement.remove();
+            const words = JSON.parse(localStorage.getItem('words')) || [];
+            const updatedWords = words.filter(word => word !== wordData);
+            localStorage.setItem('words', JSON.stringify(updatedWords));
+        }
+
+        closeModal.addEventListener('click', () => {
+            wordModal.classList.remove('active');
+        });
+
+        wordModal.addEventListener('click', (event) => {
+            if (event.target === wordModal) {
+                wordModal.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
